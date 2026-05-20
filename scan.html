@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lancer un Scan</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            color: #333;
+        }
+        .navbar {
+            background-color: #004d7f;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        .navbar-left { display: flex; align-items: center; }
+        .logo { height: 40px; margin-right: 15px; background-color: white; border-radius: 50%; padding: 2px; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 20px; font-weight: 500; }
+        .nav-links a:hover { color: #e72b3a; }
+
+        .container {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { color: #004d7f; margin-bottom: 1rem; }
+        p { color: #666; font-size: 1.1rem; margin-bottom: 2rem; }
+
+        .scan-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #004d7f;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 2rem auto;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
+            box-shadow: 0 4px 15px rgba(0,77,127,0.4);
+            border: none;
+        }
+
+        .scan-circle:hover {
+            transform: scale(1.05);
+            background-color: #e72b3a;
+        }
+
+        .scan-circle:active {
+            transform: scale(0.95);
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #004d7f;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .btn-my-ip {
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-my-ip:hover { background-color: #e2e6ea; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; }
+            .navbar-left { margin-bottom: 1rem; width: 100%; justify-content: center; }
+            .nav-links { display: flex; flex-direction: column; width: 100%; align-items: center; }
+            .nav-links a { margin: 5px 0; margin-left: 0; }
+            .container { padding: 1rem; margin: 2rem auto; width: 90%; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="arclogo.jpg" alt="Logo" class="logo">
+            <span>Scanner d'Arc</span>
+        </div>
+        <div class="nav-links">
+            <a href="/home">Accueil</a>
+            <a href="conversations.html">Conversations</a>
+            <a href="/logout">Se déconnecter</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Lancer une analyse de sécurité</h1>
+        <p>Entrez votre IP et cliquez sur le bouton pour démarrer le scan distant.</p>
+        
+        <div class="input-group">
+            <input type="text" id="targetIpInput" placeholder="Ex: 192.168.1.1" style="padding: 10px; width: 250px; border-radius: 5px; border: 1px solid #ddd;">
+            <button type="button" id="btnMyIp" class="btn-my-ip">Mon IP</button>
+        </div>
+        
+            <button type="button" id="btnScan" class="scan-circle">SCAN</button>
+            <p id="scanError" style="color:red; display:none; margin-top:15px;">
+                Une IP doit être renseignée pour lancer un scan.
+            </p>
+            <div id="loader" class="loader">
+
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('btnMyIp').addEventListener('click', fillMyIp);
+    document.getElementById('btnScan').addEventListener('click', startScan);
+
+    // Vérifier au chargement si un scan est déjà en cours
+    async function checkScanStatus() {
+        try {
+            const res = await fetch('/api/scan/status');
+            const data = await res.json();
+            if (data.scanning) {
+                setScanningState(true);
+            }
+        } catch (e) {
+            console.error("Impossible de vérifier le statut du scan :", e);
+        }
+    }
+
+    // Active ou désactive l'état "scan en cours" sur l'interface
+    function setScanningState(isScanning) {
+        const btn = document.getElementById('btnScan');
+        const loader = document.getElementById('loader');
+        const input = document.getElementById('targetIpInput');
+        const btnMyIp = document.getElementById('btnMyIp');
+        const errorText = document.getElementById('scanError');
+
+        if (isScanning) {
+            btn.disabled = true;
+            btn.style.backgroundColor = "#ccc";
+            btn.textContent = "EN COURS...";
+            loader.style.display = 'block';
+            input.disabled = true;
+            btnMyIp.disabled = true;
+            errorText.style.display = 'none';
+        } else {
+            btn.disabled = false;
+            btn.style.backgroundColor = "#004d7f";
+            btn.textContent = "SCAN";
+            loader.style.display = 'none';
+            input.disabled = false;
+            btnMyIp.disabled = false;
+        }
+    }
+
+    async function fillMyIp() {
+        const input = document.getElementById('targetIpInput');
+        try {
+            const response = await fetch('/api/get-my-ip');
+            const data = await response.json();
+            if (data.ip) {
+                input.value = data.ip;
+            } else {
+                alert("Erreur : " + (data.error || "Impossible de récupérer l'IP"));
+            }
+        } catch (e) {
+            alert("Erreur récupération IP : " + e.message);
+        }
+    }
+
+    async function startScan() {
+        const targetIp = document.getElementById('targetIpInput').value.trim();
+        const errorText = document.getElementById('scanError');
+
+        if (!targetIp) {
+            errorText.style.display = 'block';
+            return;
+        }
+        errorText.style.display = 'none';
+
+        // Vérification côté client avant d'envoyer la requête
+        try {
+            const statusRes = await fetch('/api/scan/status');
+            const statusData = await statusRes.json();
+            if (statusData.scanning) {
+                alert("Un scan est déjà en cours. Rendez-vous dans vos conversations pour suivre son avancement.");
+                return;
+            }
+        } catch (e) { /* On laisse le serveur trancher si l'API est inaccessible */ }
+
+        setScanningState(true);
+
+        try {
+            const response = await fetch('/api/scan/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetIp })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                window.location.href = 'conversations.html';
+            } else {
+                alert("Erreur scan : " + (result.error || "Erreur inconnue"));
+                setScanningState(false);
+            }
+        } catch (e) {
+            alert("Erreur SCAN : " + e.message);
+            setScanningState(false);
+        }
+    }
+
+    // Vérification au chargement de la page
+    checkScanStatus();
+</script>
+
+</body>
+</html>

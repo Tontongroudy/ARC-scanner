@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Rapports</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            color: #333;
+        }
+        .navbar {
+            background-color: #004d7f;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        .navbar-left { display: flex; align-items: center; }
+        .logo { height: 40px; margin-right: 15px; background-color: white; border-radius: 50%; padding: 2px; }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+        }
+        .nav-links a:hover { color: #e72b3a; }
+
+        .container {
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h1 { color: #004d7f; margin-top: 0; margin-bottom: 1.5rem; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #004d7f;
+            font-weight: bold;
+        }
+        tr:hover { background-color: #f1f1f1; }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+        .btn-download {
+            background-color: #004d7f;
+            color: white;
+            margin-right: 5px;
+        }
+        .btn-download:hover { background-color: #00365a; }
+        
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-delete:hover { background-color: #c82333; }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+        .actions-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
+        }
+        .btn-bulk {
+            background-color: #dc3545; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; border:none; cursor:pointer; font-weight: bold;
+        }
+        .btn-bulk:hover { background-color: #c82333; }
+        .checkbox-col { width: 40px; text-align: center; }
+        input[type=checkbox] { transform: scale(1.2); cursor: pointer; }
+
+        .actions-right { display: flex; gap: 10px; align-items: center; }
+        .search-input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 250px; }
+
+        /* Style de la fenêtre modale (identique aux autres pages) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: white; padding: 2rem;
+            border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center; max-width: 400px; width: 90%;
+        }
+        .modal-actions {
+            margin-top: 1.5rem; display: flex; justify-content: center; gap: 15px;
+        }
+        .btn-modal {
+            padding: 10px 20px; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: bold; color: white;
+        }
+        .btn-modal-cancel { background-color: #6c757d; }
+        .btn-modal-cancel:hover { background-color: #5a6268; }
+        .btn-modal-confirm { background-color: #dc3545; }
+        .btn-modal-confirm:hover { background-color: #c82333; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; }
+            .navbar-left { margin-bottom: 1rem; width: 100%; justify-content: center; }
+            .nav-links { display: flex; flex-direction: column; width: 100%; align-items: center; }
+            .nav-links a { margin: 5px 0; margin-left: 0; }
+            
+            .actions-header { flex-direction: column; gap: 10px; align-items: stretch; }
+            .btn-bulk { width: 100%; text-align: center; }
+            .actions-right { flex-direction: column; width: 100%; }
+            .search-input { width: 100%; box-sizing: border-box; }
+            
+            th, td { padding: 10px; font-size: 0.85rem; }
+            .checkbox-col { width: 30px; }
+            
+            .container { padding: 1rem; margin: 1rem auto; width: 95%; }
+        }
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="arclogo.jpg" alt="Logo" class="logo">
+            <span>Rapports de Scan</span>
+        </div>
+        <div class="nav-links">
+            <a href="/home">Accueil</a>
+            <a href="conversations.html">Conversations</a>
+            <a href="scan.html">Nouveau Scan</a>
+            <a href="/logout">Se déconnecter</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="actions-header">
+            <h1 style="margin:0">Historique des Rapports</h1>
+            <div class="actions-right">
+                <input type="text" id="searchInput" class="search-input" placeholder="Rechercher..." onkeyup="filterReports()">
+                <button class="btn-bulk" onclick="deleteBulk()">Supprimer la sélection</button>
+            </div>
+        </div>
+        <div class="table-responsive">
+        <table id="reportsTable">
+            <thead>
+                <tr>
+                    <th class="checkbox-col"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                    <th>Date</th>
+                    <th>Sujet</th>
+                    <th>De</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rempli par JS -->
+            </tbody>
+        </table>
+        </div>
+        <div id="noData" class="no-data" style="display:none;">Aucun rapport disponible.</div>
+    </div>
+
+    <!-- Fenêtre Modale de Confirmation -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color: #004d7f; margin-top: 0;">Confirmer la suppression</h3>
+            <p id="modalMessage">...</p>
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-cancel" onclick="closeDeleteModal()">Annuler</button>
+                <button class="btn-modal btn-modal-confirm" onclick="confirmDeleteAction()">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let reportIdToDelete = null;
+        let isBulkDelete = false;
+        let allReports = []; // Stockage des rapports pour la recherche
+
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/tickets'); // L'API filtre déjà selon le rôle
+                allReports = await response.json();
+                renderReports(allReports);
+            } catch (e) {
+                console.error("Erreur chargement rapports", e);
+            }
+        }
+
+        function renderReports(reports) {
+            const tbody = document.querySelector('#reportsTable tbody');
+            const noData = document.getElementById('noData');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                if (allReports.length === 0) {
+                    noData.style.display = 'block';
+                    noData.innerText = "Aucun rapport disponible.";
+                } else {
+                    // Aucun résultat de recherche
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Aucun résultat ne correspond à votre recherche.</td></tr>';
+                    noData.style.display = 'none';
+                }
+                return;
+            }
+            noData.style.display = 'none';
+
+            reports.forEach(report => {
+                const tr = document.createElement('tr');
+                const date = new Date(report.created_at).toLocaleString('fr-FR');
+                
+                tr.innerHTML = `
+                    <td class="checkbox-col"><input type="checkbox" class="report-check" value="${report.id}"></td>
+                    <td>${date}</td>
+                    <td>${report.subject}</td>
+                    <td><strong>${report.user_name}</strong></td>
+                    <td>
+                        <a href="/api/reports/${report.id}/download" class="btn btn-download" target="_blank">Télécharger</a>
+                        <button class="btn btn-delete" onclick="deleteReport(${report.id})">Supprimer</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterReports() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allReports.filter(r => 
+                r.subject.toLowerCase().includes(term) ||
+                (r.user_name && r.user_name.toLowerCase().includes(term)) ||
+                new Date(r.created_at).toLocaleString('fr-FR').toLowerCase().includes(term)
+            );
+            renderReports(filtered);
+        }
+
+        function toggleSelectAll() {
+            const main = document.getElementById('selectAll');
+            document.querySelectorAll('.report-check').forEach(cb => cb.checked = main.checked);
+        }
+
+        function deleteBulk() {
+            const checkboxes = document.querySelectorAll('.report-check:checked');
+            if(checkboxes.length === 0) return alert("Aucun rapport sélectionné.");
+            
+            isBulkDelete = true;
+            document.getElementById('modalMessage').innerHTML = `Voulez-vous vraiment supprimer ces <strong>${checkboxes.length}</strong> rapports ?<br><br><strong style='color:#dc3545'>Attention : La suppression des rapports entraîne automatiquement la suppression des tickets de conversation associés.</strong>`;
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function deleteReport(id) {
+            reportIdToDelete = id;
+            isBulkDelete = false;
+            document.getElementById('modalMessage').innerHTML = "Voulez-vous vraiment supprimer ce rapport ?<br><br><strong style='color:#dc3545'>Attention : La suppression du rapport entraîne automatiquement la suppression du ticket de conversation associé.</strong>";
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            reportIdToDelete = null;
+            isBulkDelete = false;
+        }
+
+        async function confirmDeleteAction() {
+            const isBulk = isBulkDelete;
+            const idToDelete = reportIdToDelete;
+            closeDeleteModal();
+            let res;
+
+            if (isBulk) {
+                const checkboxes = document.querySelectorAll('.report-check:checked');
+                const ids = Array.from(checkboxes).map(cb => cb.value);
+                
+                res = await fetch('/api/tickets/delete-bulk', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ids })
+                });
+            } else if (idToDelete) {
+                res = await fetch(`/api/tickets/${idToDelete}`, { method: 'DELETE' });
+            } else {
+                return;
+            }
+
+            const result = await res.json();
+            if (result.success) loadReports();
+            else alert("Erreur: " + result.error);
+        }
+
+        loadReports();
+    </script>
+</body>
+</html>

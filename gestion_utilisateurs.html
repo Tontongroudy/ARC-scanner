@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Utilisateurs</title>
+    <script>
+        
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            color: #333;
+        }
+        .navbar {
+            background-color: #004d7f;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        .navbar-left { display: flex; align-items: center; }
+        .logo { height: 40px; margin-right: 15px; background-color: white; border-radius: 50%; padding: 2px; }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+        }
+        .nav-links a:hover { color: #e72b3a; }
+        
+        .container {
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 { color: #004d7f; margin: 0; }
+
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .btn-add:hover { background-color: #218838; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #004d7f;
+            font-weight: bold;
+        }
+
+        tr:hover { background-color: #f1f1f1; }
+
+        select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .btn-delete {
+            background-color: #e72b3a;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-delete:hover { background-color: #c02230; }
+        .btn-unlock {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 6px;
+        }
+        .btn-unlock:hover { background-color: #0b5ed7; }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: bold;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .badge-locked-admin { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .badge-locked-temp { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+        .badge-active { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .badge-admin { background-color: #cfe2ff; color: #084298; }
+        .badge-it { background-color: #e2e3e5; color: #41464b; }
+        .badge-client { background-color: #d1e7dd; color: #0f5132; }
+
+        /* Style barre de recherche */
+        .actions-right {
+            display: flex;
+            gap: 10px;
+        }
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+
+            font-size: 0.95rem;
+            width: 250px;
+        }
+
+        /* Style de la Pop-up (Modale) */
+        .modal-overlay {
+            display: none; /* Caché par défaut */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Fond semi-transparent */
+            z-index: 1000;
+            justify-content: center;
+
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+
+        }
+        .modal-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-cancel:hover { background-color: #5a6268; }
+        .btn-confirm {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-confirm:hover { background-color: #c82333; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; }
+            .navbar-left { margin-bottom: 1rem; width: 100%; justify-content: center; }
+            .nav-links { display: flex; flex-direction: column; width: 100%; align-items: center; }
+            .nav-links a { margin: 5px 0; margin-left: 0; }
+
+            .header-actions { flex-direction: column; gap: 1rem; align-items: stretch; }
+            .actions-right { flex-direction: column; width: 100%; }
+            .search-input { width: 100%; box-sizing: border-box; }
+            .btn-add { width: 100%; text-align: center; box-sizing: border-box; }
+            
+            .container { padding: 1rem; margin: 1rem auto; width: 95%; }
+            th, td { padding: 10px; font-size: 0.85rem; }
+        }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="arclogo.jpg" alt="Logo" class="logo">
+            <span>Administration ARC</span>
+        </div>
+        <div class="nav-links">
+            <a href="mainadmin.html">Retour Accueil</a>
+            <a href="/logout">Se déconnecter</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header-actions">
+            <h1>Gestion des Utilisateurs</h1>
+            <div class="actions-right">
+                <input type="text" id="searchInput" class="search-input" placeholder="Rechercher par nom..." onkeyup="filterUsers()">
+                <a href="creation_de_compte.html" class="btn-add">+ Ajouter un utilisateur</a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>Nom complet</th>
+                    <th>Email</th>
+                    <th>Rôle</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les utilisateurs seront chargés ici par JS -->
+                <tr>
+                    <td colspan="4" style="text-align:center;">Chargement...</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- Fenêtre Modale de confirmation -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#004d7f; margin-top:0;">Confirmation</h2>
+            <p id="modalMessage">Êtes-vous sûr de vouloir supprimer cet utilisateur ?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Non</button>
+                <button class="btn-confirm" onclick="confirmDeleteAction()">Oui, supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fenêtre Modale de confirmation de déblocage -->
+    <div id="unlockModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color:#004d7f; margin-top:0;">Confirmation de déblocage</h2>
+            <p id="unlockModalMessage">Êtes-vous sûr de vouloir débloquer cet utilisateur ?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeUnlockModal()">Non</button>
+                <button class="btn-confirm" style="background-color: #0d6efd;" onclick="confirmUnlockAction()">Oui, débloquer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = []; // Stocke la liste complète pour la recherche
+        let userIdToDelete = null; // Stocke l'ID de l'utilisateur à supprimer temporairement
+        let userIdToUnlock = null; // Stocke l'ID de l'utilisateur à débloquer temporairement
+
+        // Fonction pour charger les utilisateurs
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                if (!response.ok) throw new Error("Erreur chargement");
+                
+                allUsers = await response.json(); // On sauvegarde les données
+                renderTable(allUsers); // On affiche tout au début
+            } catch (error) {
+                console.error(error);
+                alert("Impossible de charger la liste des utilisateurs.");
+            }
+        }
+
+        // Fonction pour afficher le tableau (gère le filtrage)
+        function renderTable(usersList) {
+            const tbody = document.querySelector('#usersTable tbody');
+            tbody.innerHTML = '';
+
+            if (usersList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun utilisateur trouvé</td></tr>';
+                return;
+            }
+
+            usersList.forEach(user => {
+                const tr = document.createElement('tr');
+                
+                // Déterminer la selection du rôle
+                const roleSelect = `
+                    <select onchange="updateRole(${user.id}, this.value)">
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        <option value="it" ${user.role === 'it' ? 'selected' : ''}>IT</option>
+                        <option value="client" ${user.role === 'client' ? 'selected' : ''}>Client</option>
+                    </select>
+                `;
+
+                const isLockedByAdmin = user.locked_by_admin === 1;
+                const isLockedTemp = !isLockedByAdmin && user.locked_until && Date.now() < user.locked_until;
+                const isLocked = isLockedByAdmin || isLockedTemp;
+
+                // Badge de statut
+                let statusBadge = '<span class="status-badge badge-active">Actif</span>';
+                if (isLockedByAdmin) {
+                    statusBadge = '<span class="status-badge badge-locked-admin">🔒 Bloqué (admin requis)</span>';
+                } else if (isLockedTemp) {
+                    const remaining = Math.ceil((user.locked_until - Date.now()) / 1000);
+                    const min = Math.floor(remaining / 60);
+                    const sec = remaining % 60;
+                    statusBadge = `<span class="status-badge badge-locked-temp">⏳ Bloqué (${min}m${sec}s)</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td><strong>${user.fullname}</strong>${statusBadge}</td>
+                    <td>${user.email}</td>
+                    <td>${roleSelect}</td>
+                    <td style="white-space: nowrap;">
+                        <button type="button" class="btn-delete" onclick="openDeleteModal(${user.id})">Supprimer</button>
+                        ${isLocked ? `<button type="button" class="btn-unlock" onclick="openUnlockModal(${user.id}, '${isLockedByAdmin ? 'admin' : 'temp'}')">Débloquer</button>` : ''}
+                    </td> 
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Fonction de recherche
+        function filterUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allUsers.filter(user => 
+                user.fullname.toLowerCase().includes(searchTerm) || 
+                user.email.toLowerCase().includes(searchTerm)
+            );
+            renderTable(filtered);
+        }
+
+
+        // Fonction pour mettre à jour le rôle
+        async function updateRole(id, newRole) {
+            try {
+                const response = await fetch('/api/users/update-role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, newRole })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    // Petit feedback visuel (optionnel)
+                    // alert("Rôle mis à jour !");
+                } else {
+                    alert("Erreur lors de la mise à jour");
+                    loadUsers(); // On recharge pour remettre l'ancienne valeur
+                }
+            } catch (e) {
+                alert("Erreur réseau");
+            }
+        }
+
+        // Ouvre la modale
+        function openDeleteModal(id) {
+            userIdToDelete = id; // On stocke l'ID globalement
+
+            // On retrouve l'utilisateur pour afficher son nom dans la modale
+            const user = allUsers.find(u => u.id == id); 
+            const name = user ? user.fullname : "cet utilisateur";
+
+            const modal = document.getElementById('deleteModal');
+            document.getElementById('modalMessage').textContent = "Êtes-vous sûr de vouloir supprimer l'utilisateur \"" + name + "\" ?";
+
+            modal.style.display = 'flex';
+        }
+
+        // Ferme la modale
+        function closeModal() {
+            userIdToDelete = null;
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // Exécute la suppression après confirmation
+        async function confirmDeleteAction() {
+            if (!userIdToDelete) return;
+            
+            try {
+                const response = await fetch('/api/users/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userIdToDelete })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    closeModal(); // Fermer la pop-up
+                    loadUsers(); // On recharge la liste
+                } else {
+                    alert("Erreur: " + (result.error || "Impossible de supprimer"));
+                }
+            } catch (e) {
+                alert("Erreur réseau");
+            }
+        }
+        // Charger la liste au démarrage
+        document.addEventListener('DOMContentLoaded', loadUsers);
+
+        // Ouvre la modale de déblocage
+        function openUnlockModal(id, lockType) {
+            userIdToUnlock = id;
+            const user = allUsers.find(u => u.id == id);
+            const name = user ? user.fullname : "cet utilisateur";
+            const modal = document.getElementById('unlockModal');
+
+            let message;
+            if (lockType === 'admin') {
+                message = `Le compte de "${name}" est bloqué définitivement suite à des tentatives répétées après la période de blocage d'1 heure. Voulez-vous le débloquer ?`;
+            } else {
+                message = `Le compte de "${name}" est temporairement bloqué. Voulez-vous lever le blocage immédiatement ?`;
+            }
+
+            document.getElementById('unlockModalMessage').textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        // Ferme la modale de déblocage
+        function closeUnlockModal() {
+            userIdToUnlock = null;
+            document.getElementById('unlockModal').style.display = 'none';
+        }
+
+        // Exécute le déblocage après confirmation
+        async function confirmUnlockAction() {
+            if (!userIdToUnlock) return;
+
+            try {
+                const response = await fetch('/api/users/unlock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userIdToUnlock })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    closeUnlockModal();
+                    loadUsers();
+                } else {
+                    alert("Erreur : " + (result.error || "Impossible de débloquer"));
+                }
+            } catch (e) {
+                alert("Erreur réseau");
+            }
+        }
+    </script>
+</body>
+</html>

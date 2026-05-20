@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journaux d'activité (Logs)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            color: #333;
+        }
+        .navbar {
+            background-color: #004d7f;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        .navbar-left { display: flex; align-items: center; }
+        .logo { height: 40px; margin-right: 15px; background-color: white; border-radius: 50%; padding: 2px; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 20px; font-weight: 500; }
+        .nav-links a:hover { color: #e72b3a; }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        h1 { color: #004d7f; margin: 0; }
+
+        .search-box input {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #004d7f;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+        }
+        tr:hover { background-color: #fbfbfb; }
+
+        /* Badges pour les types d'actions */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+        }
+        .log-connexion { background-color: #28a745; } /* Vert */
+        .log-deconnexion { background-color: #6c757d; } /* Gris */
+        .log-scan { background-color: #007bff; } /* Bleu */
+        .log-download { background-color: #6f42c1; } /* Violet */
+        .log-status { background-color: #fd7e14; } /* Orange */
+        .log-message { background-color: #17a2b8; } /* Cyan */
+        .log-admin { background-color: #dc3545; } /* Rouge */
+        .log-securite { background-color: #e83e8c; } /* Rose */
+        
+        .user-cell { font-weight: 500; color: #333; }
+        .date-cell { color: #666; font-size: 0.9rem; min-width: 150px; }
+        .details-cell { color: #555; }
+
+        /* Boutons d'action */
+        .actions-bar { display: flex; gap: 10px; align-items: center; }
+        .btn-action { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; font-size: 0.9rem; }
+        .btn-download { background-color: #17a2b8; }
+        .btn-download:hover { background-color: #138496; }
+        .btn-clear { background-color: #dc3545; display: none; } /* Caché par défaut */
+        .btn-clear:hover { background-color: #c82333; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .modal-actions {
+            margin-top: 1.5rem; display: flex; justify-content: center; gap: 15px;
+        }
+        .btn-modal {
+            padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white;
+        }
+        .btn-modal-cancel { background-color: #6c757d; }
+        .btn-modal-cancel:hover { background-color: #5a6268; }
+        .btn-modal-confirm { background-color: #dc3545; }
+        .btn-modal-confirm:hover { background-color: #c82333; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; }
+            .navbar-left { margin-bottom: 1rem; width: 100%; justify-content: center; }
+            .nav-links { display: flex; flex-direction: column; width: 100%; align-items: center; }
+            .nav-links a { margin: 5px 0; margin-left: 0; }
+
+            .header-section { flex-direction: column; align-items: stretch; gap: 1rem; }
+            .actions-bar { flex-direction: column; width: 100%; gap: 10px; }
+            .search-box { width: 100%; }
+            .search-box input { width: 100%; box-sizing: border-box; }
+            .btn-action { width: 100%; }
+
+            .container { padding: 1rem; margin: 1rem auto; width: 95%; }
+            th, td { padding: 8px; font-size: 0.85rem; }
+            .date-cell { min-width: auto; }
+        }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="arclogo.jpg" alt="Logo" class="logo">
+            <span>Monitoring & Logs</span>
+        </div>
+        <div class="nav-links">
+            <a href="/home">Accueil</a>
+            <a href="conversations.html">Tickets</a>
+            <a href="/logout">Se déconnecter</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header-section">
+            <h1>Journal d'activité</h1>
+            <div class="actions-bar">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Rechercher..." onkeyup="filterLogs()">
+                </div>
+                <button class="btn-action btn-download" onclick="downloadLogs()">📥 Exporter CSV</button>
+                <button id="btnClear" class="btn-action btn-clear" onclick="openClearModal()">🗑️ Vider Logs</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+        <table id="logsTable">
+            <thead>
+                <tr>
+                    <th>Date & Heure</th>
+                    <th>Utilisateur</th>
+                    <th>Action</th>
+                    <th>Détails</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4" style="text-align:center">Chargement des données...</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- Modale de confirmation -->
+    <div id="clearModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color: #004d7f; margin-top: 0;">Confirmer la suppression</h3>
+            <p>Êtes-vous sûr de vouloir supprimer <strong>TOUS</strong> les logs ?<br>Cette action est irréversible.</p>
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-cancel" onclick="closeClearModal()">Annuler</button>
+                <button class="btn-modal btn-modal-confirm" onclick="confirmClearLogs()">Tout supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLogs = [];
+
+        // 0. Vérifier le rôle pour afficher le bouton "Vider"
+        fetch('/api/user/me')
+            .then(res => res.json())
+            .then(user => {
+                if (user.role === 'admin') {
+                    document.getElementById('btnClear').style.display = 'block';
+                }
+            })
+            .catch(console.error);
+
+        // 1. Charger les logs
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                if (!response.ok) throw new Error("Accès refusé ou erreur serveur");
+                allLogs = await response.json();
+                renderLogs(allLogs);
+            } catch (error) {
+                document.querySelector('#logsTable tbody').innerHTML = `<tr><td colspan="4" style="color:red; text-align:center">${error.message}</td></tr>`;
+            }
+        }
+
+        // 2. Afficher les logs dans le tableau
+        function renderLogs(logs) {
+            const tbody = document.querySelector('#logsTable tbody');
+            tbody.innerHTML = '';
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Aucun log trouvé.</td></tr>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const tr = document.createElement('tr');
+                const date = new Date(log.created_at).toLocaleString('fr-FR');
+                const badgeClass = getBadgeClass(log.action);
+
+                tr.innerHTML = `
+                    <td class="date-cell">${date}</td>
+                    <td class="user-cell">${log.user_name || 'Système'}</td>
+                    <td><span class="badge ${badgeClass}">${log.action}</span></td>
+                    <td class="details-cell">${log.details}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 3. Déterminer la couleur du badge
+        function getBadgeClass(action) {
+            if (action === 'CONNEXION' || action === 'INSCRIPTION') return 'log-connexion';
+            if (action === 'DECONNEXION') return 'log-deconnexion';
+            if (action === 'SCAN') return 'log-scan';
+            if (action === 'DOWNLOAD') return 'log-download';
+            if (action === 'STATUS' || action === 'STATUS_CHANGE') return 'log-status';
+            if (action === 'MESSAGE') return 'log-message';
+            if (action.startsWith('ADMIN') || action === 'TICKET_DELETE') return 'log-admin';
+            if (action === 'SECURITE') return 'log-securite';
+            return 'log-deconnexion'; // Defaut
+        }
+
+        // 4. Filtrer les logs
+        function filterLogs() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allLogs.filter(log => 
+                (log.user_name && log.user_name.toLowerCase().includes(term)) ||
+                log.action.toLowerCase().includes(term) ||
+                log.details.toLowerCase().includes(term) ||
+                new Date(log.created_at).toLocaleString('fr-FR').toLowerCase().includes(term)
+            );
+            renderLogs(filtered);
+        }
+
+        // 5. Télécharger les logs
+        function downloadLogs() {
+            window.location.href = '/api/logs/download';
+        }
+
+        // 6. Gestion de la modale et suppression
+        function openClearModal() {
+            document.getElementById('clearModal').style.display = 'flex';
+        }
+
+        function closeClearModal() {
+            document.getElementById('clearModal').style.display = 'none';
+        }
+
+        async function confirmClearLogs() {
+            closeClearModal();
+            try {
+                const res = await fetch('/api/logs', { method: 'DELETE' });
+                const result = await res.json();
+                if(result.success) {
+                    fetchLogs(); // Rafraîchir le tableau vide
+                } else {
+                    alert("Erreur: " + result.error);
+                }
+            } catch(e) { alert("Erreur réseau"); }
+        }
+
+        // Init
+        fetchLogs();
+        // Refresh auto toutes les 30s
+        setInterval(fetchLogs, 30000);
+    </script>
+</body>
+</html>

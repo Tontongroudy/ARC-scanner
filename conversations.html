@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversations</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .navbar {
+            background-color: #004d7f;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            flex-shrink: 0;
+        }
+        .navbar-left { display: flex; align-items: center; }
+        .logo { height: 40px; margin-right: 15px; background-color: white; border-radius: 50%; padding: 2px; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 20px; font-weight: 500; }
+        
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden; /* Empêche le double scroll */
+        }
+
+        /* Colonne de gauche : Liste des tickets */
+        .sidebar {
+            width: 300px;
+            background-color: white;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            color: #004d7f;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ticket-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .ticket-content-wrapper { display: flex; align-items: flex-start; }
+        .ticket-checkbox { margin-right: 10px; margin-top: 5px; cursor: pointer; transform: scale(1.2); }
+        .ticket-item:hover { background-color: #f1f1f1; }
+        .ticket-item.active { background-color: #eef6ff; border-left: 4px solid #004d7f; }
+        .ticket-subject { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; }
+        .ticket-meta { font-size: 0.8rem; color: #666; }
+        .status-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; color: white; font-weight: 500; }
+        .status-ouvert { background-color: #28a745; } /* Vert */
+        .status-prise-en-charge { background-color: #ffc107; color: #333; } /* Jaune */
+        .status-en-cours { background-color: #007bff; } /* Bleu */
+        .status-termine { background-color: #dc3545; } /* Rouge */
+        .status-erreur { background-color: #dc3545; } /* Rouge pour erreur */
+
+        /* Colonne de droite : Chat */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+        }
+        .chat-header {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            background-color: #f8f9fa;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-select {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .btn-delete-ticket {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-delete-ticket:hover { background-color: #c82333; }
+        .btn-download-ticket {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-download-ticket:hover { background-color: #138496; }
+        .btn-bulk-trash {
+            background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #dc3545; padding: 0 5px;
+        }
+        .btn-bulk-trash:hover { transform: scale(1.1); }
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f4f6f8;
+        }
+        .message {
+            margin-bottom: 15px;
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            line-height: 1.4;
+            position: relative;
+        }
+        /* Actions sur les messages (Edit/Delete) */
+        .msg-actions {
+            display: none;
+            position: absolute;
+            top: -10px;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .message:hover .msg-actions { display: block; }
+        .msg-btn-icon {
+            cursor: pointer; border: none; background: none; font-size: 0.9rem; padding: 0 3px;
+        }
+        .msg-btn-icon:hover { transform: scale(1.2); }
+        
+        .edit-area { display: flex; gap: 5px; margin-top: 5px; }
+        .edit-area input { flex: 1; padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+        .btn-small { padding: 4px 8px; font-size: 0.8rem; cursor: pointer; border-radius: 4px; border: none; color: white; }
+        .btn-save-edit { background-color: #28a745; }
+        .btn-cancel-edit { background-color: #6c757d; }
+
+        .msg-system {
+            background-color: #fff3cd;
+        }
+        .msg-system {
+            background-color: #fff3cd;
+            color: #856404;
+            margin: 10px auto;
+            text-align: center;
+            width: 90%;
+            font-size: 0.9rem;
+        }
+        .msg-ai-analysis {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            color: #0d47a1;
+            margin: 15px auto;
+            width: 95%;
+            border-left: 5px solid #1976d2;
+            white-space: pre-wrap;
+        }
+        .msg-me {
+            background-color: #004d7f;
+            color: white;
+            margin-left: auto; /* Aligner à droite */
+            border-bottom-right-radius: 2px;
+        }
+        .msg-other {
+            background-color: white;
+            border: 1px solid #ddd;
+            margin-right: auto; /* Aligner à gauche */
+            border-bottom-left-radius: 2px;
+        }
+        .msg-info {
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+        
+        .input-area {
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            background-color: white;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .btn-send {
+            background-color: #e72b3a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-send:hover { background-color: #c02230; }
+        
+        .no-selection {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #888;
+            font-size: 1.2rem;
+        }
+
+        /* Style de la fenêtre modale personnalisée */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .modal-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .btn-modal {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+        }
+        .btn-modal-cancel { background-color: #6c757d; }
+        .btn-modal-cancel:hover { background-color: #5a6268; }
+        .btn-modal-confirm { background-color: #dc3545; }
+        .btn-modal-confirm:hover { background-color: #c82333; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; height: auto; }
+            .navbar-left { margin-bottom: 1rem; width: 100%; justify-content: center; }
+            .nav-links { display: flex; flex-direction: column; width: 100%; align-items: center; }
+            .nav-links a { margin: 5px 0; margin-left: 0; }
+
+            .main-content { flex-direction: column; }
+            .sidebar { width: 100%; height: 250px; border-right: none; border-bottom: 1px solid #ddd; }
+            
+            .message { max-width: 85%; }
+            .input-area { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="arclogo.jpg" alt="Logo" class="logo">
+            <span>Centre de Support & Scans</span>
+        </div>
+        <div class="nav-links">
+            <a href="/home">Accueil</a>
+            <a href="scan.html">Nouveau Scan</a>
+            <a href="/logout">Déconnexion</a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="sidebar" id="ticketList">
+            <div class="sidebar-header">
+                <span>Vos Tickets</span>
+                <button class="btn-bulk-trash" onclick="deleteSelectedTickets()" title="Supprimer la sélection">🗑️</button>
+            </div>
+            <div id="loadingText" style="padding:15px; text-align:center; color:#666; display:none;">Chargement...</div>
+        </div>
+
+        <div class="chat-area">
+            <div id="noSelection" class="no-selection">Sélectionnez un ticket pour voir les détails</div>
+            
+            <div id="chatContent" style="display:none; flex-direction:column; height:100%;">
+                <div class="chat-header">
+                    <span id="currentTicketTitle">Ticket #...</span>
+                    <div id="statusArea"></div>
+                </div>
+                <div class="messages-container" id="messagesBox">
+                    <!-- Messages -->
+                </div>
+                <div class="input-area">
+                    <input type="file" id="fileInput" style="display: none;" onchange="showFilePreview()">
+                    <button class="btn-attach" onclick="document.getElementById('fileInput').click()" title="Joindre un fichier">📎</button>
+                    <span id="filePreview" class="file-preview"></span>
+                    <input type="text" id="msgInput" placeholder="Écrivez votre message..." onkeypress="handleEnter(event)">
+                    <button class="btn-send" onclick="sendMessage()">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fenêtre Modale de Confirmation -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color: #004d7f; margin-top: 0;">Confirmer la suppression</h3>
+            <p id="modalMessage">Êtes-vous sûr de vouloir supprimer ce ticket et le rapport associé ?<br>Cette action est irréversible.</p>
+            <div class="modal-actions">
+                <button type="button" id="btnCancelDelete" class="btn-modal btn-modal-cancel">Annuler</button>
+                <button type="button" id="btnConfirmDelete" class="btn-modal btn-modal-confirm">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTicketId = null;
+        let currentUserInfo = null;
+        let ticketIdToDelete = null; // Variable pour stocker l'ID temporairement
+        let messageIdToDelete = null; // ID du message à supprimer
+        let isBulkDelete = false; // Pour savoir si c'est une suppression multiple
+
+        // 1. Charger infos utilisateur (pour savoir qui est "moi")
+        fetch('/api/user/me')
+            .then(r => r.json())
+            .then(u => {
+                currentUserInfo = u;
+                loadTickets();
+            })
+            .catch(e => {
+                console.error("Erreur utilisateur:", e);
+                loadTickets();
+            });
+
+        // 2. Charger la liste des tickets
+        async function loadTickets() {
+            const res = await fetch('/api/tickets');
+            const tickets = await res.json();
+            const list = document.getElementById('ticketList');
+            
+            // On vide la liste pour éviter les doublons et retirer le texte de chargement
+            const headerHTML = list.querySelector('.sidebar-header').outerHTML;
+            list.innerHTML = headerHTML;
+
+            tickets.forEach(ticket => {
+                const div = document.createElement('div');
+                const statusClass = getStatusClass(ticket.status);
+                // On garde la classe active si le ticket est celui en cours
+                div.className = `ticket-item ${currentTicketId === ticket.id ? 'active' : ''}`;
+                div.onclick = () => selectTicket(ticket, div);
+                div.innerHTML = `
+                    <div class="ticket-content-wrapper">
+                        <input type="checkbox" class="ticket-checkbox" value="${ticket.id}" onclick="event.stopPropagation()">
+                        <div>
+                            <div class="ticket-subject">${ticket.subject}</div>
+                            <div class="ticket-meta">
+                                <span class="status-badge ${statusClass}">${ticket.status}</span>
+                                ${new Date(ticket.created_at).toLocaleDateString()}
+                                <br>De: ${ticket.user_name || 'Inconnu'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // Fonction pour récupérer la couleur selon le statut
+        function getStatusClass(status) {
+            if (status === 'ouvert') return 'status-ouvert';
+            if (status === 'prise en charge') return 'status-prise-en-charge';
+            if (status === "en cours d'analyse" || status === "en cours de traitement") return 'status-en-cours';
+            if (status === 'terminé') return 'status-termine';
+            if (status === 'erreur') return 'status-erreur';
+            return '';
+        }
+
+        // 3. Sélectionner un ticket et charger ses messages
+        async function selectTicket(ticket, element) {
+            currentTicketId = ticket.id;
+            document.getElementById('noSelection').style.display = 'none';
+            document.getElementById('chatContent').style.display = 'flex';
+            document.getElementById('currentTicketTitle').innerText = `Ticket #${ticket.id} - ${ticket.subject}`;
+            // Highlight visuel
+            document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            // Gestion du statut (Admin/IT peuvent changer, Client voit juste le badge)
+            const statusArea = document.getElementById('statusArea');
+            statusArea.innerHTML = '';
+
+            if (currentUserInfo && (currentUserInfo.role === 'admin' || currentUserInfo.role === 'it')) {
+                const select = document.createElement('select');
+                select.className = 'status-select';
+                select.innerHTML = `
+                    <option value="ouvert">Ouvert</option>
+                    <option value="prise en charge">Prise en charge</option>
+                    <option value="en cours de traitement">En cours de traitement</option>
+                    <option value="erreur">Erreur</option>
+                    <option value="terminé">Terminé</option>
+                `;
+                select.value = ticket.status;
+                select.onchange = (e) => updateTicketStatus(ticket.id, e.target.value);
+                statusArea.appendChild(select);
+            } else {
+                const badge = document.createElement('span');
+                badge.className = 'status-badge ' + getStatusClass(ticket.status);
+                badge.innerText = ticket.status;
+                statusArea.appendChild(badge);
+            }
+
+            // Bouton de téléchargement du fichier de logs (rapport)
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'btn-download-ticket';
+            downloadBtn.innerText = '📥 Rapport';
+            downloadBtn.onclick = () => window.location.href = `/api/reports/${ticket.id}/download`;
+            statusArea.appendChild(downloadBtn);
+
+            // Bouton de suppression
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn-delete-ticket';
+            deleteBtn.innerText = 'Supprimer';
+            deleteBtn.onclick = () => deleteTicket(ticket.id);
+            statusArea.appendChild(deleteBtn);
+
+            loadMessages();
+        }
+
+        // 4. Charger les messages
+        async function loadMessages() {
+            if(!currentTicketId) return;
+            const res = await fetch(`/api/tickets/${currentTicketId}/messages`);
+            const messages = await res.json();
+            const box = document.getElementById('messagesBox');
+            box.innerHTML = '';
+
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                
+                if (msg.sender_id == 0) {
+                    if (msg.is_ai_analysis) {
+                        div.className = 'message msg-ai-analysis';
+                        const aiInfoDiv = document.createElement('div');
+                        aiInfoDiv.className = 'msg-info';
+                        aiInfoDiv.textContent = 'Intelligence Artificielle (Analyse Sécurité)'; // Utilisation sécurisée
+                        div.appendChild(aiInfoDiv);
+                        const aiTextDiv = document.createElement('div');
+                        aiTextDiv.className = 'msg-text';
+                        aiTextDiv.textContent = msg.content; // Utilisation sécurisée
+                        div.appendChild(aiTextDiv);
+                    } else {
+                        div.className = 'message msg-system';
+                        div.textContent = msg.content; // Utilisation sécurisée
+                    }
+                } else {
+                    // Comparaison via ID pour plus de sécurité (nécessite l'update serveur api/user/me)
+                    const isMe = currentUserInfo && currentUserInfo.id === msg.sender_id;
+                    // On utilise l'API /user/me pour comparer le role ou l'id si dispo, 
+                    // ici on va supposer que si sender_fullname == currentUserInfo.fullname c'est nous (simplifié)
+                    const isMeCheck = (msg.fullname === currentUserInfo.fullname);
+
+                    div.className = `message ${isMeCheck ? 'msg-me' : 'msg-other'}`;
+                    
+                    const msgInfoDiv = document.createElement('div');
+                    msgInfoDiv.className = 'msg-info';
+                    msgInfoDiv.textContent = `${msg.fullname} (${msg.role})`; // Utilisation sécurisée
+                    div.appendChild(msgInfoDiv);
+
+                    const contentEl = document.createElement('div');
+                    contentEl.id = `msg-content-${msg.id}`;
+                    contentEl.className = 'msg-text';
+                    div.appendChild(contentEl);
+                    
+                    // Affichage selon le type (Texte, Image, Vidéo)
+                    if (msg.type === 'image') {
+                        const img = document.createElement('img');
+                        img.src = msg.attachment_url;
+                        img.className = 'msg-image';
+                        img.onclick = () => window.open(msg.attachment_url, '_blank');
+                        contentEl.appendChild(img);
+                        if (msg.content) contentEl.appendChild(document.createElement('br'));
+                    } else if (msg.type === 'video') {
+                        const video = document.createElement('video');
+                        video.src = msg.attachment_url;
+                        video.controls = true;
+                        video.className = 'msg-video';
+                        contentEl.appendChild(video);
+                        if (msg.content) contentEl.appendChild(document.createElement('br'));
+                    } else if (msg.type === 'file') {
+                        const link = document.createElement('a');
+                        link.href = msg.attachment_url;
+                        link.target = '_blank';
+                        link.textContent = msg.attachment_name || 'Fichier joint';
+                        contentEl.appendChild(link);
+                        if (msg.content) contentEl.appendChild(document.createElement('br'));
+                    } else { // Default to text
+                        const textNode = document.createTextNode(msg.content);
+                        contentEl.appendChild(textNode);
+                    }
+
+                    // Ajout des boutons si c'est mon message ou si je suis admin
+                    if (isMe || (currentUserInfo && currentUserInfo.role === 'admin')) {
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'msg-actions';
+                        
+                        // Edit seulement si c'est moi
+                        if (isMe) {
+                            actionsDiv.innerHTML += `<button class="msg-btn-icon" onclick="editMessage(${msg.id})" title="Modifier">✏️</button>`;
+                        }
+                        actionsDiv.innerHTML += `<button class="msg-btn-icon" onclick="confirmDeleteMessage(${msg.id})" title="Supprimer" style="color:#dc3545">🗑️</button>`;
+                        div.appendChild(actionsDiv);
+                    }
+                }
+                box.appendChild(div);
+            });
+        }
+
+        // 5. Envoyer un message
+        async function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const content = input.value.trim();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!content && !file) return; // Ne rien envoyer si vide
+
+            // Utilisation de FormData pour envoyer fichier + texte
+            const formData = new FormData();
+            formData.append('content', content);
+            if (file) {
+                formData.append('attachment', file);
+            }
+            
+            await fetch(`/api/tickets/${currentTicketId}/messages`, {
+                method: 'POST',
+                body: formData // Pas de Content-Type header manuel avec FormData !
+            });
+
+            input.value = '';
+            fileInput.value = ''; // Reset fichier
+            document.getElementById('filePreview').style.display = 'none';
+            loadMessages();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function showFilePreview() {
+            const file = document.getElementById('fileInput').files[0];
+            const preview = document.getElementById('filePreview');
+            if (file) {
+                preview.innerText = file.name;
+                preview.style.display = 'inline';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // 6. Mettre à jour le statut
+        async function updateTicketStatus(id, newStatus) {
+            await fetch(`/api/tickets/${id}/status`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status: newStatus })
+            });
+            loadTickets(); // Rafraîchir la liste pour voir le changement à gauche
+        }
+
+        // 7. Demander la suppression (Ouvre la modale)
+        function deleteTicket(id) {
+            ticketIdToDelete = id;
+            messageIdToDelete = null;
+            isBulkDelete = false;
+            document.getElementById('modalMessage').innerHTML = "Êtes-vous sûr de vouloir supprimer ce ticket ?<br><br><strong style='color:#dc3545'>Attention : La suppression du ticket entraîne automatiquement la suppression du rapport d'analyse associé.</strong>";
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            ticketIdToDelete = null;
+            messageIdToDelete = null;
+            isBulkDelete = false;
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // 8. Exécuter la suppression (Unique ou Multiple)
+       async function confirmDeleteAction() {
+    const isBulk = isBulkDelete;
+    const idToDelete = ticketIdToDelete;
+    const msgToDelete = messageIdToDelete;
+
+    try {
+        if (isBulk) {
+            const checkboxes = document.querySelectorAll('.ticket-checkbox:checked');
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+
+            const res = await fetch('/api/tickets/delete-bulk', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ ids })
+            });
+
+            const result = await res.json();
+
+            if (!result.success) {
+                alert("Erreur: " + result.error);
+                return;
+            }
+
+            closeDeleteModal();
+            loadTickets();
+            return;
+        }
+
+        if (idToDelete) {
+            const res = await fetch(`/api/tickets/${idToDelete}`, {
+                method: 'DELETE'
+            });
+
+            const result = await res.json();
+
+            if (!result.success) {
+                alert("Erreur: " + result.error);
+                return;
+            }
+
+            closeDeleteModal();
+            currentTicketId = null;
+            document.getElementById('chatContent').style.display = 'none';
+            document.getElementById('noSelection').style.display = 'flex';
+            loadTickets();
+            return;
+        }
+
+        if (msgToDelete) {
+            const res = await fetch(`/api/messages/${msgToDelete}`, {
+                method: 'DELETE'
+            });
+
+            const result = await res.json();
+
+            if (!result.success) {
+                alert("Erreur: " + result.error);
+                return;
+            }
+
+            closeDeleteModal();
+            loadMessages();
+            return;
+        }
+
+    } catch (e) {
+        alert("Erreur réseau: " + e.message);
+    }
+}
+
+        // 9. Suppression multiple
+        function deleteSelectedTickets() {
+            const checkboxes = document.querySelectorAll('.ticket-checkbox:checked');
+            if (checkboxes.length === 0) return alert("Veuillez sélectionner au moins un ticket.");
+
+            isBulkDelete = true;
+            document.getElementById('modalMessage').innerHTML = `Voulez-vous supprimer ces <strong>${checkboxes.length}</strong> tickets ?<br><br><strong style='color:#dc3545'>Attention : La suppression des tickets entraîne automatiquement la suppression des rapports associés.</strong>`;
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        // 10. Fonctions pour les messages
+        function confirmDeleteMessage(id) {
+            messageIdToDelete = id;
+            ticketIdToDelete = null;
+            isBulkDelete = false;
+            document.getElementById('modalMessage').innerHTML = "Voulez-vous vraiment supprimer ce message ?";
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function editMessage(id) {
+            const contentDiv = document.getElementById(`msg-content-${id}`);
+            const currentText = contentDiv.innerText;
+            const parent = contentDiv.parentElement;
+
+            // Cacher le contenu textuel et afficher l'éditeur
+            contentDiv.style.display = 'none';
+            
+            const editDiv = document.createElement('div');
+            editDiv.id = `edit-area-${id}`;
+            editDiv.className = 'edit-area';
+            editDiv.innerHTML = `
+                <input type="text" id="edit-input-${id}" value="">
+                <button class="btn-small btn-save-edit" onclick="saveMessage(${id})">OK</button>
+                <button class="btn-small btn-cancel-edit" onclick="cancelEdit(${id})">Annuler</button>
+            `;
+            parent.appendChild(editDiv);
+            document.getElementById(`edit-input-${id}`).value = currentText;
+        }
+
+        function cancelEdit(id) {
+            document.getElementById(`edit-area-${id}`).remove();
+            document.getElementById(`msg-content-${id}`).style.display = 'block';
+        }
+
+        async function saveMessage(id) {
+            const newContent = document.getElementById(`edit-input-${id}`).value;
+            if (!newContent.trim()) return alert("Le message ne peut pas être vide");
+
+            await fetch(`/api/messages/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ content: newContent })
+            });
+            loadMessages();
+        }
+
+        // Init
+            document.getElementById('btnCancelDelete').addEventListener('click', closeDeleteModal);
+            document.getElementById('btnConfirmDelete').addEventListener('click', confirmDeleteAction);
+
+            loadTickets();
+
+            setInterval(() => {
+                if (currentTicketId) loadMessages();
+                loadTickets();
+            }, 5000);
+    </script>
+</body>
+</html>

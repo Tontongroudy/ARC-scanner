@@ -1,0 +1,366 @@
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            color: #333;
+            font-size: 18px; /* Augmentation de la taille du texte */
+        }
+        /* Barre de navigation */
+        .navbar {
+            background-color: #004d7f;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .navbar-left {
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            height: 40px;
+            margin-right: 15px;
+            background-color: white; /* Fond blanc pour voir le logo si transparent */
+            border-radius: 50%;
+            padding: 2px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover {
+            color: #e72b3a;
+        }
+        .navbar-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        /* Menu Profil */
+        .dropdown {
+            display: inline-block;
+            position: relative;
+            margin-left: 20px;
+        }
+        .nav-links .dropdown > a {
+            margin-left: 0;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 5px;
+            right: 0;
+            top: 100%;
+        }
+        .nav-links .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            margin-left: 0;
+            font-weight: normal;
+        }
+        .nav-links .dropdown-content a:hover {
+            background-color: #f1f1f1;
+            color: #e72b3a;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        /* Contenu principal */
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .intro-text {
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            text-align: justify;
+        }
+        /* Styles refondus pour la présentation */
+        .intro-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .intro-header h1 {
+            color: #004d7f;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .intro-header p {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        .feature-card {
+            background: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            border-color: #004d7f;
+        }
+        .feature-card h3 {
+            color: #e72b3a;
+            margin-top: 0;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f4f6f8;
+            padding-bottom: 10px;
+        }
+        .feature-card ul {
+            padding-left: 20px;
+            color: #555;
+        }
+        .feature-card li {
+            margin-bottom: 0.8rem;
+        }
+        /* Carrousel */
+        .carousel-container {
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            gap: 15px;
+            padding-bottom: 15px; /* Pour la scrollbar */
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none; /* Masque la scrollbar (Firefox) */
+        }
+        .carousel-container::-webkit-scrollbar {
+            display: none; /* Masque la scrollbar (Chrome/Safari) */
+        }
+        .carousel-item {
+            flex: 0 0 calc(50% - 7.5px); /* 50% moins la moitié du gap pour en afficher 2 */
+            scroll-snap-align: start;
+        }
+        .carousel-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .carousel-item img:hover {
+            transform: scale(1.02);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; }
+            .navbar-left { margin-bottom: 1rem; width: 100%; justify-content: center; }
+            .navbar-center { position: static; transform: none; margin: 10px 0; }
+            .nav-links { display: flex; flex-direction: column; width: 100%; align-items: center; }
+            .nav-links a { margin: 5px 0; margin-left: 0; }
+            .dropdown { margin-left: 0; margin-top: 5px; }
+            .dropdown-content { position: static; box-shadow: none; border: 1px solid #eee; display: none; width: 100%; text-align: center; }
+            .dropdown:hover .dropdown-content { display: block; }
+
+            .container { padding: 1rem; margin: 1rem auto; width: 95%; }
+            .intro-header h1 { font-size: 1.8rem; }
+            .carousel-item { flex: 0 0 100%; }
+        }
+
+        /* Bouton d'aide flottant (Bas gauche) */
+        .help-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 55px;
+            height: 55px;
+            background-color: #004d7f;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            font-size: 24px;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .help-button:hover {
+            transform: scale(1.1);
+            background-color: #e72b3a;
+        }
+
+        /* Info-bulle (Rectangle au-dessus du rond) */
+        .help-tooltip {
+            position: fixed;
+            bottom: 85px; /* Positionné au-dessus du bouton (20px + 55px + marge) */
+            left: 20px;
+            background-color: white;
+            color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1001;
+            font-size: 14px;
+            width: 220px;
+            border: 1px solid #004d7f;
+
+            /* Animation initiale */
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease-out;
+        }
+        .help-tooltip.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        /* Petit triangle indicateur */
+        .help-tooltip::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 17px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #004d7f transparent transparent;
+        }
+
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="arclogo.jpg" alt="Logo" class="logo">
+        </div>
+        <div class="navbar-center">
+            Bienvenue
+        </div>
+        <div class="nav-links">
+            <a href="conversations.html">Conversations</a>
+            <a href="rapport.html">Rapports</a>
+            <a href="scan.html">Scan</a>
+            <div class="dropdown">
+                <a href="#">Profil &#9662;</a>
+                <div class="dropdown-content">
+                    <a href="settings.html">Paramètres</a>
+                    <a href="/logout">Se déconnecter</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="intro-text">
+        <div class="intro-header">
+            <h1>Scanner d’Arc — Présentation</h1>
+            <p>Bienvenue sur Scanner d’Arc, votre solution dédiée à l’analyse et à la détection de vulnérabilités.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>Fonctionnement</h3>
+                <p>Une fois un scan lancé :</p>
+                <ul>
+                    <li>Une IA vérifie les vulnérabilités sur votre infrastructure.</li>
+                    <li>Les résultats sont analysés et présentés clairement.</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Suivi & Communication</h3>
+                <p>Via l’onglet <strong>“Conversations”</strong>, cet espace permet de :</p>
+                <ul>
+                    <li>Suivre les vulnérabilités détectées</li>
+                    <li>Échanger avec l’équipe IT</li>
+                    <li>Suivre les corrections</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Objectif</h3>
+                <p>Scanner d’Arc permet de :</p>
+                <ul>
+                    <li>Détecter les failles de sécurité</li>
+                    <li>Centraliser les échanges</li>
+                    <li>Améliorer la sécurité globale</li>
+                </ul>
+            </div>
+             <div class="feature-card">
+                <h3>Résultats et reporting</h3>
+                <p>Un rapport détaillé sera généré après chaque scan. Il contiendra :</p>
+                <ul>
+                    <li>les vulnérabilités détectées</li>
+                    <li>leur niveau de gravité</li>
+                    <li>des recommandations de correction (jcp encore)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Galerie</h2>
+        <div class="carousel-container">
+            <div class="carousel-item"><img src="test1.png" alt="Photo 1"></div>
+            <div class="carousel-item"><img src="test2.jpg" alt="Photo 2"></div>
+            <div class="carousel-item"><img src="test1.png" alt="Photo 3"></div>
+            <div class="carousel-item"><img src="test2.jpg" alt="Photo 4"></div>
+        </div>
+    </div>
+
+    <!-- Info-bulle d'aide -->
+    <div id="helpTooltip" class="help-tooltip">
+        <strong>Besoin d'aide ?</strong><br>
+        Contactez le support au :<br>
+        <span style="color: #e72b3a; font-weight: bold;">+221 33 859 16 16</span>
+    </div>
+
+    <!-- Bouton d'aide -->
+    <div class="help-button" onclick="showHelp()" title="Besoin d'aide ?">?</div>
+
+    <script>
+        const carousel = document.querySelector('.carousel-container');
+        
+        setInterval(() => {
+            // Si on est à la fin du défilement, retour au début
+            if (carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 10) {
+                carousel.scrollTo({ left: 0, behavior: 'smooth' });
+            } else {
+                // Sinon, défilement de la largeur visible (donc 2 images)
+                carousel.scrollBy({ left: carousel.clientWidth, behavior: 'smooth' });
+            }
+        }, 4000); // Défilement toutes les 4 secondes
+
+        // Fonction pour afficher/cacher l'info-bulle avec animation
+        function showHelp() {
+            const tooltip = document.getElementById('helpTooltip');
+            tooltip.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

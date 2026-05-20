@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un compte</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .register-card {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .register-header h1 {
+            margin: 0;
+            color: #004d7f;
+            font-size: 1.8rem;
+        }
+
+        .register-logo {
+            width: 200px;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #e72b3a;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+            background-color: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #004d7f;
+            outline: none;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.9rem;
+            background-color: #004d7f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: #e72b3a;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.2rem;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .form-footer a {
+            color: #004d7f;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .form-footer a:hover {
+            color: #e72b3a;
+        }
+
+        .info-message {
+            background-color: #eef6ff;
+            color: #004d7f;
+            border: 1px solid #b6d4fe;
+            padding: 0.8rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .alert-success {
+            display: none; /* Caché par défaut */
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-card">
+        <div class="register-header">
+            <img src="arclogo.jpg" alt="Logo" class="register-logo">
+            <h1>Créer un compte</h1>
+        </div>
+
+        <div id="success-msg" class="alert-success">
+            Compte créé avec succès !
+        </div>
+
+        <!-- Optionnel -->
+        <!-- <div class="info-message">Remplissez les informations ci-dessous pour créer votre compte.</div> -->
+
+        <form action="/register" method="POST">
+            <div class="form-group">
+                <label for="fullname">Nom complet</label>
+                <input type="text" id="fullname" name="fullname" placeholder="Votre nom complet" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Adresse e-mail</label>
+                <input type="email" id="email" name="email" placeholder="exemple@arc.sn" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" placeholder="Créer un mot de passe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirmer le mot de passe</label>
+                <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirmer le mot de passe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="role">Rôle</label>
+                <select id="role" name="role" required>
+                    <option value="">Sélectionnez un rôle</option>
+                    <option value="admin">Admin</option>
+                    <option value="it">IT</option>
+                    <option value="client">Client</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit">Créer le compte</button>
+        </form>
+        <div class="form-footer">
+            <a href="mainadmin.html">Retour à l'accueil</a>
+        </div>
+                <div class="form-footer">
+            <a href="gestion_utilisateurs.html">Retour à la page de gestion</a>
+        </div>
+    </div>
+
+    <script>
+        // Vérifie si l'URL contient ?status=success pour afficher le message
+        if (new URLSearchParams(window.location.search).get('status') === 'success') {
+            document.getElementById('success-msg').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

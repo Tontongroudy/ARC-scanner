@@ -1,0 +1,8 @@
+.env
+node_modules/
+ssl/key.pem
+arc_database.db
+arc_database.db-shm
+arc_database.db-wal
+reports/
+uploads/

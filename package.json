@@ -1,0 +1,32 @@
+{
+  "name": "arc",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "axios": "^1.16.0",
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.0",
+    "express-session": "^1.19.0",
+    "fs": "^0.0.1-security",
+    "helmet": "^8.1.0",
+    "multer": "^2.1.1",
+    "openai": "^4.104.0",
+    "os": "^0.1.2",
+    "path": "^0.12.7",
+    "selfsigned": "^5.5.0",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^6.0.1"
+  },
+  "description": ""
+}
