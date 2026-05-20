@@ -1,0 +1,134 @@
+# ARC Scanner
+
+Plateforme web de scan de sécurité réseau avec analyse IA. Permet de lancer des scans Nmap + Nuclei sur une cible, d'obtenir un rapport analysé par GPT-4o, et de gérer les résultats via un système de tickets.
+
+---
+
+## Prérequis
+
+- [Node.js](https://nodejs.org/) v18 ou supérieur
+- [Nmap](https://nmap.org/download.html) — doit être accessible via la commande `nmap` dans le terminal
+- [Nuclei](https://github.com/projectdiscovery/nuclei/releases) — doit être installé dans `C:\Program Files\nuclei_3.8.0_windows_amd64\`
+- Une clé API [OpenAI](https://platform.openai.com/api-keys)
+
+---
+
+## Installation
+
+### 1. Cloner le repo
+
+```bash
+git clone https://github.com/Tontongroudy/ARC-scanner.git
+cd ARC-scanner
+```
+
+### 2. Installer les dépendances du serveur principal
+
+```bash
+npm install
+```
+
+### 3. Installer les dépendances du service scanner
+
+```bash
+cd scanner
+npm install
+cd ..
+```
+
+### 4. Configurer les variables d'environnement
+
+Crée un fichier `.env` à la racine du projet :
+
+```env
+OPENAI_API_KEY=sk-...       # Ta clé API OpenAI
+SESSION_SECRET=une_chaine_longue_aleatoire_et_unique
+SCANNER_API_KEY=une_autre_chaine_secrete_pour_le_scanner
+```
+
+### 5. Générer un certificat SSL
+
+Le projet requiert un certificat SSL pour tourner en HTTPS. Génère un certificat auto-signé avec OpenSSL :
+
+```bash
+# Créer le dossier ssl s'il n'existe pas
+mkdir ssl
+
+# Générer la clé privée et le certificat (valable 1 an)
+openssl req -x509 -newkey rsa:2048 -keyout ssl/key.pem -out ssl/cert.pem -days 365 -nodes -subj "/CN=localhost/O=ARC" -addext "subjectAltName=IP:127.0.0.1"
+```
+
+> **Note :** En production, remplace le certificat auto-signé par un vrai certificat (Let's Encrypt via Certbot).
+
+---
+
+## Lancement
+
+Le projet se compose de **deux services** à lancer séparément.
+
+### Terminal 1 — Serveur principal (port 3000)
+
+```bash
+node server.js
+```
+
+### Terminal 2 — Service scanner (port 4000)
+
+```bash
+node scanner_service.js
+```
+
+L'application est accessible sur : `https://localhost:3000`
+
+> Le navigateur affichera un avertissement SSL (certificat auto-signé). Clique sur "Avancer quand même".
+
+---
+
+## Première connexion
+
+Un compte administrateur est créé automatiquement au premier démarrage :
+
+| Champ | Valeur |
+|-------|--------|
+| Email | `admin@arc.sn` |
+| Mot de passe | `admin123` |
+
+**Change ce mot de passe immédiatement** après la première connexion via Paramètres.
+
+---
+
+## Structure du projet
+
+```
+ARC-scanner/
+├── server.js               # Serveur principal Express (HTTPS, port 3000)
+├── scanner_service.js      # Service de scan Nmap + Nuclei (port 4000)
+├── scanner/                # Version standalone du service scanner
+├── ssl/                    # Certificats SSL (cert.pem public, key.pem non commité)
+├── *.html                  # Pages de l'interface web
+├── .env                    # Variables d'environnement (non commité)
+├── .gitignore
+└── package.json
+```
+
+---
+
+## Rôles utilisateurs
+
+| Rôle | Accès |
+|------|-------|
+| `admin` | Gestion des utilisateurs, tous les tickets, logs |
+| `it` | Tous les tickets, logs |
+| `client` | Ses propres tickets uniquement |
+
+> Les nouveaux comptes créés via l'inscription ont toujours le rôle `client`.
+
+---
+
+## Variables d'environnement
+
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | Clé API OpenAI pour l'analyse IA des rapports |
+| `SESSION_SECRET` | Clé secrète pour les sessions Express (chaîne aléatoire longue) |
+| `SCANNER_API_KEY` | Clé partagée entre le serveur principal et le service scanner |
