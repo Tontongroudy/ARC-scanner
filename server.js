@@ -236,8 +236,12 @@ db.run("ALTER TABLE users ADD COLUMN locked_by_admin INTEGER DEFAULT 0", (err) =
 
 // Fonction utilitaire pour ajouter un log
 function addLog(userId, userName, action, details) {
-    db.run("INSERT INTO logs (user_id, user_name, action, details) VALUES (?, ?, ?, ?)", 
+    db.run("INSERT INTO logs (user_id, user_name, action, details) VALUES (?, ?, ?, ?)",
         [userId, userName, action, details], (err) => { if(err) console.error("Log Error:", err); });
+}
+
+function isValidId(id) {
+    return /^\d+$/.test(String(id));
 }
 
 // --- ROUTES ---
@@ -729,6 +733,7 @@ app.get('/api/tickets', (req, res) => {
 app.get('/api/tickets/:id/messages', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: "Session expirée ou invalide. Veuillez vous reconnecter." });
     const ticketId = req.params.id;
+    if (!isValidId(ticketId)) return res.status(400).json({ error: "ID invalide" });
 
     // Vérification de sécurité : le client a-t-il le droit de voir ce ticket ?
     db.get("SELECT user_id FROM tickets WHERE id = ?", [ticketId], (err, ticket) => {
@@ -850,9 +855,10 @@ app.post('/api/tickets/:id/status', (req, res) => { // Correction: 'path' est d�
 });
 
 // Supprimer un ticket
-app.delete('/api/tickets/:id', (req, res) => { // Correction: 'path' est déjà défini
+app.delete('/api/tickets/:id', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: "Non connecté" });
     const ticketId = req.params.id;
+    if (!isValidId(ticketId)) return res.status(400).json({ error: "ID invalide" });
 
     db.get("SELECT user_id, subject FROM tickets WHERE id = ?", [ticketId], (err, ticket) => {
         if (err || !ticket) return res.status(404).json({ error: "Ticket introuvable" });
@@ -921,9 +927,10 @@ app.post('/api/tickets/delete-bulk', (req, res) => { // Correction: 'path' est d
 });
 
 // Télécharger le rapport
-app.get('/api/reports/:id/download', (req, res) => { // Correction: 'path' est déjà défini
+app.get('/api/reports/:id/download', (req, res) => {
     if (!req.session.userId) return res.status(401).send("Non connecté");
     const ticketId = req.params.id;
+    if (!isValidId(ticketId)) return res.status(400).send("ID invalide");
 
     db.get("SELECT user_id, subject FROM tickets WHERE id = ?", [ticketId], (err, ticket) => {
         if (err || !ticket) return res.status(404).send("Ticket introuvable");
@@ -942,6 +949,45 @@ app.get('/api/reports/:id/download', (req, res) => { // Correction: 'path' est d
             res.status(404).send("Fichier de rapport non trouvé sur le serveur.");
         }
     });
+});
+
+// Crédits OpenAI (Admin uniquement)
+app.get('/api/admin/openai-credits', async (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).json({ error: "Accès refusé" });
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "Clé API OpenAI non configurée" });
+
+    try {
+        const response = await axios.get('https://api.openai.com/dashboard/billing/credit_grants', {
+            headers: { Authorization: `Bearer ${apiKey}` }
+        });
+        res.json(response.data);
+    } catch (e) {
+        const status = e.response?.status;
+        if (status === 403) {
+            // Compte pay-as-you-go : pas de crédits prépayés, essayer l'abonnement
+            try {
+                const sub = await axios.get('https://api.openai.com/dashboard/billing/subscription', {
+                    headers: { Authorization: `Bearer ${apiKey}` }
+                });
+                const d = sub.data;
+                return res.json({
+                    total_granted: d.hard_limit_usd ?? null,
+                    total_used: null,
+                    total_available: null,
+                    plan: d.plan?.title ?? 'Pay-as-you-go',
+                    pay_as_you_go: true
+                });
+            } catch (_) {
+                return res.status(200).json({ pay_as_you_go: true, error: "Crédits non disponibles sur ce type de compte (pay-as-you-go)." });
+            }
+        }
+        const message = e.response?.data?.error?.message || e.message;
+        res.status(status || 500).json({ error: message });
+    }
 });
 
 // Récupérer les LOGS (Admin/IT seulement)

@@ -16,12 +16,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: relative;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .navbar-left {
             display: flex;
             align-items: center;
+            flex: 1;
         }
         .logo {
             height: 40px;
@@ -41,12 +41,12 @@
             color: #e72b3a;
         }
         .navbar-center {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+            flex: 1;
+            text-align: center;
             color: white;
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
             font-weight: bold;
+            white-space: nowrap;
         }
         /* Menu Profil */
         .dropdown {
@@ -180,7 +180,7 @@
         @media (max-width: 768px) {
             .navbar { flex-direction: column; }
             .navbar-left { margin-bottom: 1rem; width: 100%; justify-content: center; }
-            .navbar-center { position: static; transform: none; margin: 10px 0; }
+            .navbar-center { flex: none; text-align: center; margin: 6px 0; font-size: clamp(1.1rem, 5vw, 1.4rem); }
             .nav-links { display: flex; flex-direction: column; width: 100%; align-items: center; }
             .nav-links a { margin: 5px 0; margin-left: 0; }
             .dropdown { margin-left: 0; margin-top: 5px; }
@@ -193,7 +193,7 @@
         }
 
         /* Bouton d'aide flottant (Bas gauche) */
-        .help-button {
+.help-button {
             position: fixed;
             bottom: 20px;
             left: 20px;
@@ -277,6 +277,8 @@
     </nav>
 
     <div class="container">
+
+
         <div class="intro-text">
         <div class="intro-header">
             <h1>Scanner d’Arc — Présentation</h1>
@@ -343,7 +345,7 @@
     <div class="help-button" onclick="showHelp()" title="Besoin d'aide ?">?</div>
 
     <script>
-        const carousel = document.querySelector('.carousel-container');
+const carousel = document.querySelector('.carousel-container');
         
         setInterval(() => {
             // Si on est à la fin du défilement, retour au début

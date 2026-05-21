@@ -369,22 +369,44 @@
             tickets.forEach(ticket => {
                 const div = document.createElement('div');
                 const statusClass = getStatusClass(ticket.status);
-                // On garde la classe active si le ticket est celui en cours
                 div.className = `ticket-item ${currentTicketId === ticket.id ? 'active' : ''}`;
                 div.onclick = () => selectTicket(ticket, div);
-                div.innerHTML = `
-                    <div class="ticket-content-wrapper">
-                        <input type="checkbox" class="ticket-checkbox" value="${ticket.id}" onclick="event.stopPropagation()">
-                        <div>
-                            <div class="ticket-subject">${ticket.subject}</div>
-                            <div class="ticket-meta">
-                                <span class="status-badge ${statusClass}">${ticket.status}</span>
-                                ${new Date(ticket.created_at).toLocaleDateString()}
-                                <br>De: ${ticket.user_name || 'Inconnu'}
-                            </div>
-                        </div>
-                    </div>
-                `;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'ticket-content-wrapper';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'ticket-checkbox';
+                checkbox.value = ticket.id;
+                checkbox.onclick = (e) => e.stopPropagation();
+
+                const info = document.createElement('div');
+
+                const subject = document.createElement('div');
+                subject.className = 'ticket-subject';
+                subject.textContent = ticket.subject;
+
+                const meta = document.createElement('div');
+                meta.className = 'ticket-meta';
+
+                const badge = document.createElement('span');
+                badge.className = `status-badge ${statusClass}`;
+                badge.textContent = ticket.status;
+
+                const date = document.createTextNode(' ' + new Date(ticket.created_at).toLocaleDateString());
+                const br = document.createElement('br');
+                const from = document.createTextNode('De: ' + (ticket.user_name || 'Inconnu'));
+
+                meta.appendChild(badge);
+                meta.appendChild(date);
+                meta.appendChild(br);
+                meta.appendChild(from);
+                info.appendChild(subject);
+                info.appendChild(meta);
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(info);
+                div.appendChild(wrapper);
                 list.appendChild(div);
             });
         }
