@@ -361,8 +361,12 @@
             const res = await fetch('/api/tickets');
             const tickets = await res.json();
             const list = document.getElementById('ticketList');
-            
-            // On vide la liste pour éviter les doublons et retirer le texte de chargement
+
+            // Sauvegarder les IDs cochés avant de re-rendre
+            const checkedIds = new Set(
+                Array.from(document.querySelectorAll('.ticket-checkbox:checked')).map(cb => cb.value)
+            );
+
             const headerHTML = list.querySelector('.sidebar-header').outerHTML;
             list.innerHTML = headerHTML;
 
@@ -380,6 +384,7 @@
                 checkbox.className = 'ticket-checkbox';
                 checkbox.value = ticket.id;
                 checkbox.onclick = (e) => e.stopPropagation();
+                if (checkedIds.has(String(ticket.id))) checkbox.checked = true;
 
                 const info = document.createElement('div');
 

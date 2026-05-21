@@ -93,7 +93,9 @@ app.post('/run-scan', async (req, res) => {
 
 async function sendWebhook(url, data) {
     try {
-        await axios.post(url, data); // Utilisation d'axios pour les webhooks
+        await axios.post(url, data, {
+            headers: { 'x-scanner-api-key': process.env.SCANNER_API_KEY }
+        });
     } catch (e) { console.error("Webhook failed:", e.message); }
 }
 

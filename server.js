@@ -1,9 +1,9 @@
-require('dotenv').config(); // Charge les variables d'environnement depuis .env
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const net = require('net');
@@ -523,14 +523,7 @@ app.get('/api/scan/status', (req, res) => {
 
 function isValidTargetIp(ip) {
     if (!net.isIPv4(ip) && !net.isIPv6(ip)) return false;
-    // Bloquer loopback et plages privées (SSRF)
-    const parts = ip.split('.').map(Number);
-    if (parts[0] === 127) return false;
-    if (parts[0] === 10) return false;
-    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return false;
-    if (parts[0] === 192 && parts[1] === 168) return false;
-    if (parts[0] === 169 && parts[1] === 254) return false;
-    if (ip === '0.0.0.0' || ip === '::1') return false;
+    if (ip === '0.0.0.0') return false;
     return true;
 }
 
@@ -595,7 +588,7 @@ app.post('/api/scan/start', (req, res) => {
             const scannerServerUrl = 'http://127.0.0.1:4000/run-scan';
 
             // Webhook interne en HTTP (port dédié) pour éviter les soucis de certificat auto-signé
-            const callbackUrl = `http://127.0.0.1:${PORT}/api/scan/webhook`;
+            const callbackUrl = `http://127.0.0.1:${WEBHOOK_PORT}/api/scan/webhook`;
 
             axios.post(
                 scannerServerUrl,
@@ -893,18 +886,24 @@ app.post('/api/tickets/delete-bulk', (req, res) => { // Correction: 'path' est d
         return res.status(400).json({ error: "Aucune sélection" });
     }
 
-    // Préparer la requête pour vérifier les droits sur ces IDs
-    const placeholders = ids.map(() => '?').join(',');
+    const numericIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+    if (numericIds.length === 0) return res.status(400).json({ error: "IDs invalides" });
+
+    const placeholders = numericIds.map(() => '?').join(',');
     const query = `SELECT id, user_id, subject FROM tickets WHERE id IN (${placeholders})`;
 
-    db.all(query, ids, (err, tickets) => {
+    db.all(query, numericIds, (err, tickets) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        // Filtrer : Admin peut tout supprimer, Client seulement les siens
-        const validTickets = tickets.filter(t => req.session.role === 'admin' || t.user_id === req.session.userId);
+        // Admin et IT peuvent tout supprimer, Client seulement les siens
+        const validTickets = tickets.filter(t =>
+            req.session.role === 'admin' ||
+            req.session.role === 'it' ||
+            t.user_id === req.session.userId
+        );
         const validIds = validTickets.map(t => t.id);
 
-        if (validIds.length === 0) return res.json({ success: true, count: 0 }); // Rien à faire
+        if (validIds.length === 0) return res.status(403).json({ error: "Aucun ticket autorisé" });
 
         // Suppression des fichiers physiques
         validTickets.forEach(t => {
@@ -1035,6 +1034,11 @@ app.delete('/api/logs', (req, res) => { // Correction: 'path' est déjà défini
         addLog(req.session.userId, req.session.fullname, "CLEAR_LOGS", "Historique des logs effacé par l'admin");
         res.json({ success: true });
     });
+});
+
+const WEBHOOK_PORT = 3001;
+http.createServer(app).listen(WEBHOOK_PORT, '127.0.0.1', () => {
+    console.log(`Webhook HTTP interne sur port ${WEBHOOK_PORT}`);
 });
 
 server.listen(PORT, '0.0.0.0', () => {

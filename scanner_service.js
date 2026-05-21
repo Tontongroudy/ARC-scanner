@@ -1,4 +1,5 @@
-require('dotenv').config(); // Charge les variables d'environnement depuis .env
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const util = require('util');
@@ -193,7 +194,9 @@ app.post('/run-scan', async (req, res) => {
 
 async function sendWebhook(url, data) {
     try {
-        await axios.post(url, data);
+        await axios.post(url, data, {
+            headers: { 'x-scanner-api-key': process.env.SCANNER_API_KEY }
+        });
     } catch (e) {
         console.error("Webhook failed:", e.message);
     }
