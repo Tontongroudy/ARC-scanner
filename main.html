@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accueil</title>
@@ -115,7 +118,7 @@
         }
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(2, 1fr); /* Force le mode 2x2 */
             gap: 2rem;
             margin-bottom: 4rem;
         }
@@ -128,9 +131,9 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-            border-color: #004d7f;
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+            border-color: #e72b3a; /* Couleur rouge ARC au survol */
         }
         .feature-card h3 {
             color: #e72b3a;
@@ -190,6 +193,9 @@
             .container { padding: 1rem; margin: 1rem auto; width: 95%; }
             .intro-header h1 { font-size: 1.8rem; }
             .carousel-item { flex: 0 0 100%; }
+            .features-grid {
+                grid-template-columns: 1fr; /* Repasse en 1 colonne sur mobile */
+            }
         }
 
         /* Bouton d'aide flottant (Bas gauche) */
@@ -284,8 +290,8 @@
             <p>Votre solution dédiée à l’analyse et à la détection de vulnérabilités.</p>
         </div>
 
-        <div class=”features-grid”>
-            <div class=”feature-card”>
+        <div class="features-grid">
+            <div class="feature-card">
                 <h3>Fonctionnement</h3>
                 <p>Lorsqu’un scan est lancé :</p>
                 <ul>
@@ -295,7 +301,7 @@
                 </ul>
             </div>
 
-            <div class=”feature-card”>
+            <div class="feature-card">
                 <h3>Suivi & Communication</h3>
                 <p>Depuis l’onglet <strong>”Conversations”</strong> :</p>
                 <ul>
@@ -305,7 +311,7 @@
                 </ul>
             </div>
 
-            <div class=”feature-card”>
+            <div class="feature-card">
                 <h3>Objectif</h3>
                 <p>Scanner d’Arc vous permet de :</p>
                 <ul>
@@ -314,7 +320,7 @@
                     <li>Renforcer la sécurité de votre infrastructure</li>
                 </ul>
             </div>
-             <div class=”feature-card”>
+             <div class="feature-card">
                 <h3>Résultats et reporting</h3>
                 <p>Après chaque scan, vous recevez :</p>
                 <ul>
