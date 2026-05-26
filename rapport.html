@@ -207,7 +207,7 @@
 
         async function loadReports() {
             try {
-                const response = await fetch('/api/tickets'); // L'API filtre déjà selon le rôle
+                const response = await fetch('/api/reports/list');
                 allReports = await response.json();
                 renderReports(allReports);
             } catch (e) {

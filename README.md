@@ -64,23 +64,35 @@ openssl req -x509 -newkey rsa:2048 -keyout ssl/key.pem -out ssl/cert.pem -days 3
 
 ## Lancement
 
-Le projet se compose de **deux services** à lancer séparément.
+Le projet se compose de **deux services** à lancer séparément dans deux terminaux.
 
-### Terminal 1 — Serveur principal (port 3000)
+### Terminal 1 — Serveur principal (HTTPS :3000 + Webhook HTTP :3001)
 
 ```bash
+cd ARC-scanner
 node server.js
 ```
 
-### Terminal 2 — Service scanner (port 4000)
+### Terminal 2 — Service scanner (HTTP :4000)
 
 ```bash
+cd ARC-scanner/scanner
 node scanner_service.js
 ```
+
+> Le service scanner doit être lancé depuis le dossier `scanner/`, pas depuis la racine.
 
 L'application est accessible sur : `https://localhost:3000`
 
 > Le navigateur affichera un avertissement SSL (certificat auto-signé). Clique sur "Avancer quand même".
+
+### Ports utilisés
+
+| Port | Service | Protocole |
+|------|---------|-----------|
+| 3000 | Serveur principal (interface web + API) | HTTPS |
+| 3001 | Webhook interne (retour des résultats du scanner) | HTTP local uniquement |
+| 4000 | Service scanner (Nmap + Nuclei + IA) | HTTP local uniquement |
 
 ---
 
@@ -101,10 +113,14 @@ Un compte administrateur est créé automatiquement au premier démarrage :
 
 ```
 ARC-scanner/
-├── server.js               # Serveur principal Express (HTTPS, port 3000)
-├── scanner_service.js      # Service de scan Nmap + Nuclei (port 4000)
-├── scanner/                # Version standalone du service scanner
-├── ssl/                    # Certificats SSL (cert.pem public, key.pem non commité)
+├── server.js               # Serveur principal Express (HTTPS :3000 + Webhook HTTP :3001)
+├── scanner/
+│   ├── scanner_service.js  # Service de scan Nmap + Nuclei + IA (HTTP :4000)
+│   ├── package.json
+│   └── node_modules/
+├── ssl/                    # Certificats SSL (cert.pem commité, key.pem non commité)
+├── reports/                # Rapports de scan générés (non commités)
+├── uploads/                # Fichiers joints aux messages (non commités)
 ├── *.html                  # Pages de l'interface web
 ├── .env                    # Variables d'environnement (non commité)
 ├── .gitignore

@@ -842,6 +842,12 @@ app.post('/api/tickets/:id/status', (req, res) => { // Correction: 'path' est d�
         db.run("UPDATE tickets SET status = ? WHERE id = ?", [status, ticketId], (err) => {
             if (err) return res.status(500).json({ error: err.message });
             addLog(req.session.userId, req.session.fullname, "STATUS", `Statut du ticket #${ticketId} changé de '${oldStatus}' à '${status}'`);
+
+            if (status === 'fermé') {
+                const reportPath = path.join(__dirname, 'reports', `scan_report_${ticketId}.txt`);
+                fs.unlink(reportPath, () => {});
+            }
+
             res.json({ success: true });
         });
     });
@@ -922,6 +928,32 @@ app.post('/api/tickets/delete-bulk', (req, res) => { // Correction: 'path' est d
             addLog(req.session.userId, req.session.fullname, "BULK_DELETE", `Suppression groupée de ${validIds.length} tickets: ${deletedSubjects}`);
             res.json({ success: true, count: validIds.length });
         });
+    });
+});
+
+// Liste des rapports disponibles (fichier physique existant)
+app.get('/api/reports/list', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: "Non connecté" });
+
+    const query = req.session.role === 'client'
+        ? `SELECT tickets.id, tickets.subject, tickets.created_at, users.fullname as user_name
+           FROM tickets JOIN users ON tickets.user_id = users.id
+           WHERE tickets.user_id = ? ORDER BY tickets.created_at DESC`
+        : `SELECT tickets.id, tickets.subject, tickets.created_at, users.fullname as user_name
+           FROM tickets JOIN users ON tickets.user_id = users.id
+           ORDER BY tickets.created_at DESC`;
+
+    const params = req.session.role === 'client' ? [req.session.userId] : [];
+
+    db.all(query, params, (err, tickets) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const withReports = tickets.filter(t => {
+            const reportPath = path.join(__dirname, 'reports', `scan_report_${t.id}.txt`);
+            return fs.existsSync(reportPath);
+        });
+
+        res.json(withReports);
     });
 });
 
