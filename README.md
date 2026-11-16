@@ -1,6 +1,67 @@
-# ARC Scanner
+<p align="center">
+  <img src="arclogo.jpg" alt="ARC Scanner" width="110">
+</p>
 
-Plateforme web de scan de sécurité réseau avec analyse IA. Permet de lancer des scans Nmap + Nuclei sur une cible, d'obtenir un rapport analysé par GPT-4o, et de gérer les résultats via un système de tickets.
+<h1 align="center">ARC Scanner</h1>
+
+<p align="center">
+  <b>Plateforme web de scan de vulnérabilités réseau avec analyse IA et suivi par tickets</b><br>
+  Projet réalisé en stage chez <b>ARC Informatique</b> (Dakar, Sénégal)
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white">
+  <img src="https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white">
+  <img src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white">
+  <img src="https://img.shields.io/badge/Socket.io-010101?style=flat-square&logo=socketdotio&logoColor=white">
+  <img src="https://img.shields.io/badge/Nmap-4682B4?style=flat-square">
+  <img src="https://img.shields.io/badge/Nuclei-6C3BAA?style=flat-square">
+  <img src="https://img.shields.io/badge/GPT--4o-412991?style=flat-square&logo=openai&logoColor=white">
+</p>
+
+---
+
+## Présentation
+
+ARC Scanner permet à un client de lancer un audit de sécurité sur sa machine en un clic. La plateforme enchaîne un scan **Nmap** (services, versions, CVE connues via `vulners`) et un scan **Nuclei** (templates de vulnérabilités actives), puis demande à **GPT-4o** de rédiger une analyse claire : sévérité globale, explication de chaque faille et recommandations.
+
+Chaque scan ouvre un **ticket**. Le client et l'équipe IT y échangent en temps réel, suivent l'avancement du scan et téléchargent le rapport.
+
+## Fonctionnalités
+
+- 🔍 **Scan automatisé** : Nmap `-sV --script vulners` + Nuclei (critical / high / medium). Voir la [couverture CVE](CVE_COVERAGE.md)
+- 🤖 **Analyse IA** : synthèse des résultats bruts par GPT-4o (vulnérabilités, sévérité, remédiations)
+- 🎫 **Tickets temps réel** : statut du scan et messagerie client ↔ IT via Socket.io, pièces jointes, rapports téléchargeables
+- 👥 **3 rôles** : `admin`, `it`, `client`, chacun avec ses droits d'accès
+- 📜 **Journalisation** : logs de connexion et d'actions, consultables et exportables par l'admin et l'équipe IT
+
+## Architecture
+
+```mermaid
+flowchart LR
+    C[Navigateur client] -- HTTPS :3000 --> S[Serveur principal<br>Express + Socket.io]
+    S <--> DB[(SQLite)]
+    S -- requête de scan --> SC[Service scanner<br>:4000, local]
+    SC --> N1[Nmap + vulners]
+    SC --> N2[Nuclei]
+    SC --> AI[GPT-4o]
+    SC -- webhook :3001, local --> S
+    S -- temps réel --> C
+```
+
+Le service de scan et le webhook n'écoutent qu'en local (`127.0.0.1`). Ils s'authentifient avec une clé partagée (`SCANNER_API_KEY`).
+
+## Sécurité
+
+| Mesure | Détail |
+|--------|--------|
+| HTTPS | Certificat TLS chargé depuis des fichiers, clé privée exclue du dépôt |
+| Mots de passe | Hachage **bcrypt** |
+| Anti-bruteforce | Rate limiting sur la connexion et **verrouillage progressif** : 2 min, puis 1 h, puis blocage jusqu'à déblocage par un admin |
+| En-têtes HTTP | **Helmet** avec Content Security Policy |
+| Validation des entrées | Contrôle strict de l'IP cible avant toute commande système |
+| Concurrence | Un seul scan simultané par compte |
+| Secrets | Clés API et secrets de session dans `.env`, jamais commités |
 
 ---
 
