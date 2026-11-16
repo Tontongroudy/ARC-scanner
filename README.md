@@ -29,11 +29,11 @@ Chaque scan ouvre un **ticket**. Le client et l'équipe IT y échangent en temps
 
 ## Fonctionnalités
 
-- 🔍 **Scan automatisé** : Nmap `-sV --script vulners` + Nuclei (critical / high / medium). Voir la [couverture CVE](CVE_COVERAGE.md)
-- 🤖 **Analyse IA** : synthèse des résultats bruts par GPT-4o (vulnérabilités, sévérité, remédiations)
-- 🎫 **Tickets temps réel** : statut du scan et messagerie client ↔ IT via Socket.io, pièces jointes, rapports téléchargeables
-- 👥 **3 rôles** : `admin`, `it`, `client`, chacun avec ses droits d'accès
-- 📜 **Journalisation** : logs de connexion et d'actions, consultables et exportables par l'admin et l'équipe IT
+- **Scan automatisé** : Nmap `-sV --script vulners` + Nuclei (critical / high / medium). Voir la [couverture CVE](CVE_COVERAGE.md)
+- **Analyse IA** : synthèse des résultats bruts par GPT-4o (vulnérabilités, sévérité, remédiations)
+- **Tickets temps réel** : statut du scan et messagerie client ↔ IT via Socket.io, pièces jointes, rapports téléchargeables
+- **3 rôles** : `admin`, `it`, `client`, chacun avec ses droits d'accès
+- **Journalisation** : logs de connexion et d'actions, consultables et exportables par l'admin et l'équipe IT
 
 ## Architecture
 
@@ -68,8 +68,8 @@ Le service de scan et le webhook n'écoutent qu'en local (`127.0.0.1`). Ils s'au
 ## Prérequis
 
 - [Node.js](https://nodejs.org/) v18 ou supérieur
-- [Nmap](https://nmap.org/download.html) — doit être accessible via la commande `nmap` dans le terminal
-- [Nuclei](https://github.com/projectdiscovery/nuclei/releases) — doit être installé dans `C:\Program Files\nuclei_3.8.0_windows_amd64\`
+- [Nmap](https://nmap.org/download.html) : doit être accessible via la commande `nmap` dans le terminal
+- [Nuclei](https://github.com/projectdiscovery/nuclei/releases) : doit être installé dans `C:\Program Files\nuclei_3.8.0_windows_amd64\`
 - Une clé API [OpenAI](https://platform.openai.com/api-keys)
 
 ---
@@ -127,14 +127,14 @@ openssl req -x509 -newkey rsa:2048 -keyout ssl/key.pem -out ssl/cert.pem -days 3
 
 Le projet se compose de **deux services** à lancer séparément dans deux terminaux.
 
-### Terminal 1 — Serveur principal (HTTPS :3000 + Webhook HTTP :3001)
+### Terminal 1 : serveur principal (HTTPS :3000 + Webhook HTTP :3001)
 
 ```bash
 cd ARC-scanner
 node server.js
 ```
 
-### Terminal 2 — Service scanner (HTTP :4000)
+### Terminal 2 : service scanner (HTTP :4000)
 
 ```bash
 cd ARC-scanner/scanner
@@ -166,7 +166,7 @@ Un compte administrateur est créé automatiquement au premier démarrage :
 | Email | `admin@arc.sn` |
 | Mot de passe | `admin123` |
 
-> ℹ️ Ces identifiants sont donnés **à titre d'exemple**, pour tester le projet en local. Ils ne correspondent à aucun compte réel et ne sont utilisés sur aucune instance déployée. De même, la valeur de secours de `SESSION_SECRET` dans `server.js` ne sert qu'en développement : il faut toujours définir ce secret dans le `.env`.
+> Ces identifiants sont donnés **à titre d'exemple**, pour tester le projet en local. Ils ne correspondent à aucun compte réel et ne sont utilisés sur aucune instance déployée. De même, la valeur de secours de `SESSION_SECRET` dans `server.js` ne sert qu'en développement : il faut toujours définir ce secret dans le `.env`.
 
 **Change ce mot de passe immédiatement** après la première connexion via Paramètres.
 
