@@ -166,6 +166,8 @@ Un compte administrateur est créé automatiquement au premier démarrage :
 | Email | `admin@arc.sn` |
 | Mot de passe | `admin123` |
 
+> ℹ️ Ces identifiants sont donnés **à titre d'exemple**, pour tester le projet en local. Ils ne correspondent à aucun compte réel et ne sont utilisés sur aucune instance déployée. De même, la valeur de secours de `SESSION_SECRET` dans `server.js` ne sert qu'en développement : il faut toujours définir ce secret dans le `.env`.
+
 **Change ce mot de passe immédiatement** après la première connexion via Paramètres.
 
 ---
